@@ -5,6 +5,16 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const helmet = require('helmet')
 const morgan = require('morgan')
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const fs = require('fs');
+
+
+const credentials = 'D:\\project_pems\\firebase_js_project\\user_name-32\\X509-cert-3966428361570701940.pem'
+const client = new MongoClient('mongodb+srv://cluster0.j1rgqgf.mongodb.net/?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority', {
+  sslKey: credentials,
+  sslCert: credentials,
+  serverApi: ServerApiVersion.v1
+});
 
 const mongoose = require('mongoose')
 
@@ -42,20 +52,16 @@ app.listen(3001, () => {
 main().catch(err => console.log(err))
 
 async function main() {
-    await mongoose.connect('mongodb://0.0.0.0:27017/test')
+    try {
+        await client.connect();
+        const database = client.db("test");
+        const collection = database.collection("User");
+        const docCount = await collection.countDocuments({});
+        console.log(docCount);
+        // perform actions using client
+      } finally {
+        // Ensures that the client will close when you finish/error
+        await client.close();
+      }
 
-    const userSchema = new mongoose.Schema({
-        firstName: String,
-        lastName: String,
-        email: String,
-        password: String,
-        permissionLevel: Number
-    })
-
-    const User = mongoose.model('User', userSchema)
-
-
-    const Joe = new User({firstName:"Joe", lastName:"Joe", email:"Joe", password:"Joe", permissionLevel:1})
-
-    console.log(Joe.firstName)
 }
